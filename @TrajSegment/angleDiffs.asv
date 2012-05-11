@@ -1,0 +1,19 @@
+function res = angleDiffs(obj,units)
+% 1/2 acos( <2 cos(theta) > )
+%   where theta are the differences between adjacent rings
+% units = radians or degrees
+
+if (nargin < 2)
+   units = 'radians';
+else
+   units = validatestring(units,{'radians','degrees'});
+end
+
+nangles = obj.nangles;
+nsteps = obj.nsteps('angles');
+angDiff = angles(2:nangles,:) - angles(1:(nangles-1), :);
+cosDiff = cos(2.0 * angDiff);
+if (units == 'radians')
+   res = 
+avgcost = 0.5 * acos(avgcost) * 180/pi;
+avgcos = 0.5 * acos(avgcos) * 180/pi;

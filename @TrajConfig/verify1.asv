@@ -1,0 +1,148 @@
+%% Test basic data handling
+clear classes;
+
+C1 = TrajConfig;
+C1.nangles = 5;
+C1.tstep = 10;
+C1.calcType = 'debug';
+
+t1 = TrajSegment(C1,[10 20 30 40]);
+t1.reserve(500);
+for i=1:25
+   t1.runTraj(10*i);
+end
+t1.reserve(1000);
+for i=20:100
+   t1.runTraj(10*i);
+end
+
+t1.nsteps('angles')
+t1.time('angles')
+t1.angles(:,1:12)
+
+t1.nsteps('vels')
+t1.time('vels')
+t1.vels(:,1:12)
+
+t1.nsteps('wf')
+t1.time('wf')
+t1.wf(:,1:12)
+
+t1.time('cent')
+t1.nsteps('cent')
+t1.cent(:,1:12)
+
+timeunits = 'md';
+figure(21);
+plot(t1.time('angles',timeunits), mean(t1.data('angles'),1), 'ro');
+hold on;
+plot(t1.time('vels',timeunits), mean(t1.data('vels'),1), 'bx');
+hold on;
+plot(t1.time('wf',timeunits), mean(t1.data('wf'),1), 'g^');
+hold on;
+plot(t1.time('cent',timeunits), t1.data('cent'), 'k<');
+
+%% Test of the restarting of trajectories and combining Trajectories
+clear classes;
+C1 = TrajConfig;
+C1.nangles = 5;
+C1.tstep = 1;
+C1.calcType = 'allen';
+C1.betaES = 0.0;
+
+RandStream.setDefaultStream(RandStream('mt19937ar','seed',1));
+t1 = TrajSegment(C1,[10 20 0 0]);
+t1.reserve(2000);
+t1.runTraj(2000);
+
+RandStream.setDefaultStream(RandStream('mt19937ar','seed',1));
+t2 = TrajSegment(C1,[10 20 0 0]);
+t2.reserve(1000);
+for i=1:100
+   t2.runTraj(10*i);
+end
+% this will re-reserve space every loop (not efficient, just a test)
+for i=1:200
+   t2.runTraj(10*i);
+end
+
+disp(['diff in angles ' num2str(max(max(abs(t1.angles-t2.angles))))]);
+disp(['diff in vels ' num2str(max(max(abs(t1.vels-t2.vels))))]);
+
+%% Test of Traj
+clear classes;
+C1 = TrajConfig;
+C1.nangles = 5;
+C1.tstep = 1;
+C1.calcType = 'allen';
+C1.betaES = 0.0;
+
+RandStream.setDefaultStream(RandStream('mt19937ar','seed',1));
+t1 = TrajSegment(C1,[1 1 0 0]);
+t1.reserve(2000);
+t1.runTraj(2000);
+
+RandStream.setDefaultStream(RandStream('mt19937ar','seed',1));
+t2 = Traj;
+for i=1:10
+   t3 = TrajSegment(C1,[1 1 0 0]);
+   if (i > 1)
+      t3.extendFrom(t2.trajSegments(i-1));
+   end
+   t3.reserve(200);
+   t3.runTraj(200);
+   t2.addSegment(t3);
+end
+
+figure(100)
+plot(t1.time, mean(t1.angles,1),'ro');
+hold on;
+plot(t2.time, mean(t2.angles,1),'bx');
+
+%% Generate average angle as function of GS V
+clear classes;
+%See mathematica spreadsheet for results:
+atest = [33.5997, 25.1662, 19.9254, 16.7522, 14.7069, 13.2752, 12.2022, ...
+11.3576, 10.6691, 10.0934];
+%figure(4);
+for v1 = 1:10
+   disp(['doing calc for v1 = ', num2str(v1)]);
+   C = TrajConfig;
+   C.nangles = 100;
+   C.Vgs = v1;
+   C.betaES = 0.0;
+   C.beta1 = 1.0;
+   C.tstep = 1;
+   ts = TrajSegment(C,[1,1,0,0]);
+   nsteps = 50000;
+   ts.runTraj(nsteps);
+   temp(v1) = mean(ts.temp,2);
+   t1 = ts.avgAngle('degrees');
+   a(v1) = mean(t1(1,1000:nsteps),2);
+end
+a
+atest
+a-atest
+temp
+
+%% Ramp temperature
+clear classes;
+for temp1 = 25:25:400
+   disp(['doing calc for temperature = ', num2str(temp1)]);
+   C = TrajConfig;
+   C.nangles = 100;
+   C.Vgs = 3;
+   C.betaES = 0.0;
+   C.beta1 = 1.0;
+   C.tstep = 1;
+   ts = TrajSegment(C,[1,1,0,0]);
+   nsteps = 10000;
+   ts.runTraj(nsteps);
+   temp(v1) = mean(ts.temp,2);
+end
+24:
+atest
+a-atest
+temp
+
+

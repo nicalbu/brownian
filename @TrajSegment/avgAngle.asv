@@ -1,0 +1,6 @@
+function res = avgAngle(obj,units)
+% 1/2 acos( <2 cos(theta) > ) as a function of time
+%   where theta are the differences between adjacent rings
+% units = radians or degrees
+
+angled

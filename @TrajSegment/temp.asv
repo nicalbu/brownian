@@ -1,0 +1,29 @@
+function res = temp(obj)
+% returns temperature as a function of time
+
+% k in kcal/mol/K =  
+%   1.3806504e-23 (J/mol K) * (1kJ/1000 J) * (1 cal/4.184 J) * 6.02e23 =
+%   
+k = 0.00198649986;
+
+
+[nangles,nsteps] = size(traj.vels);
+
+% total kinetic energy versus time
+if (nargout > 1)
+   tempTime = zeros(nsteps,1);
+   for itime = 1:nsteps
+      tempTime(itime,1) = Inertia * ...
+         (traj.vels(:,itime)'*traj.vels(:,itime))/nangles/k;
+   end
+end
+% average KE per degree of freedom
+v2 = 0.0;
+for iangle = 1:nangles
+   v2 = v2 + traj.vels(iangle,:)*traj.vels(iangle,:)';
+end   
+avgv2 = v2/(nangles*nsteps);
+avgKE = 1/2 * Inertia * avgv2;
+
+% every degree of freedom has 1/2 kT energy, so T = (avgKE)/(1/2 k)
+temp = 2.0 * avgKE/k;
